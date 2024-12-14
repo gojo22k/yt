@@ -7,6 +7,8 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from config import API_ID, API_HASH, BOT_TOKEN, ADMIN_IDS
 from yt_dlp import YoutubeDL
 from uuid import uuid4  # Génération d'identifiants uniques
+import threading
+from http.server import SimpleHTTPRequestHandler, HTTPServer
 
 # Initialisation du bot
 bot = Client("youtube_downloader_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
@@ -161,6 +163,16 @@ async def download_video(client, callback_query):
         await callback_query.message.edit(f"Erreur lors du téléchargement ou de l'envoi : {e}")
         print(f"[Erreur] Téléchargement échoué : {e}")
 
-# Lancement du bot
+# Serveur HTTP minimal pour répondre aux vérifications de santé
+def run_http_server():
+    server = HTTPServer(('0.0.0.0', 8000), SimpleHTTPRequestHandler)
+    print("HTTP server running on port 8000 for health checks...")
+    server.serve_forever()
+
+# Lancement du serveur HTTP dans un thread séparé
+http_thread = threading.Thread(target=run_http_server, daemon=True)
+http_thread.start()
+
+# Lancement du bot Telegram
 if __name__ == "__main__":
     bot.run()
